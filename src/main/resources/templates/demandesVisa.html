@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorator="template"
+	  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+<meta charset="utf-8" />
+<title>Liste des demandes visa</title>
+<script type="text/javascript">
+
+	$(document).ready(function () {
+	    //begin
+	    $("input[name='info']").keyup(function (event) {
+	    	var info = event.target.value;
+	        /* console.log(event.target.value); */
+	        //begin2
+	    	$.ajax({
+				url: 'chercherDemandeVisa',
+				type: 'get',
+				data:{
+					info:info,
+					page:0,
+					size:3
+				}
+			}).done(function(response) {
+				//vider le tableau :
+				$("#tabHeader").nextAll('tr').remove();
+				console.log("********");
+			    console.log(response);
+				$("#tabHeader").after($(response).find(".content").each(function (index) {
+					var li = this;
+					var i = index;
+					$("#tab").add(li);
+					
+				}));
+			});
+	    	//end2
+	    });
+	    //end
+	});
+
+
+	function getDemandesVisaWithAjax (p, s) {
+		if (p == undefined || s == undefined) {
+			p = 0;
+			s = 3;
+		}
+		$.ajax({
+			url: 'chercherDemandeVisa',
+			type: 'get',
+			data:{
+				info:$("input[name='info']").val(),
+				page:p,
+				size:s
+			}
+		}).done(function(response) {
+			$(response).find(".content").each(function (index) {
+				var li = this;
+				var i = index;
+				$(".content").empty();
+				setTimeout(function() {
+					$("#tab").append(li);
+				}, 1000 + i * 100);
+			})
+		});
+	}
+</script>
+</head>
+<body>
+	<div layout:fragment="content">
+		<div id="container" class="container">
+			<!-- <form th:action="@{/chercherDemandeVisa}" method="get"> -->
+				<div class="form-group" style="margin-top:50px;">
+					<div class="input-group">
+						<input id="info" type="text" class="form-control" name="info" placeholder="chercher une demande par son id, citoyen" autocomplete="off" />
+						<span class="input-group-btn">
+							<button type="submit" class="btn btn-primary" th:onclick="'testAjax(' + ${page} + ', ' + ${size} + ')'"><span class="glyphicon glyphicon-search"></span></button>
+						</span>
+					</div>
+				</div>
+			<!-- </form> -->
+		
+			<table id="tab" class="table table-striped">
+				<tr id="tabHeader">
+					<th>Num</th>
+					<th>Type</th>
+					<th>Date</th>
+					<th>Duree</th>
+					<th>Montant</th>
+					<th>Etat</th>
+					<th>Citoyen</th>
+				</tr>
+				<tr class="content" th:each="d:${listeDemandesVisa}">
+					<td th:text="${d.id}"></td>
+					<td th:text="${d.class.simpleName}"></td>
+					<td th:text="${d.dateDemande}"></td>
+					<td th:text="${d.duree}"></td>
+					<td th:text="${d.montant}"></td>
+					<td th:text="${d.accorde}"></td>
+					<td th:text="${d.citoyen.nom}"></td>
+				</tr>
+		</table>
+		<nav aria-label="Page navigation example">
+		  <ul class="pagination">
+		  	<li class="page-item"><a class="page-link" th:href="@{consulterDemandesVisa(page=${pageCourante - 1}, size=${size})}" th:if="${pageCourante - 1} >= 0">Previous</a></li>
+		    <li class="page-item" th:class="${pageCourante} == ${pages[__status.index__]} ? 'active' : ''" th:each="pa,status:${pages}"><a class="page-link" th:href="@{consulterDemandesVisa(page=${pages[__status.index__]}, size=${size})}" th:text="${pages[__status.index__] + 1}"></a></li>
+		    <li class="page-item"><a class="page-link" th:href="@{consulterDemandesVisa(page=${pageCourante + 1}, size=${size})}" th:if="${taille > pageCourante + 1}">Next</a></li>
+		  </ul>
+		</nav>
+		
+		<div id="test"></div>
+		
+		<input id="target" type="text" value="Hello there" />
+		</div>
+	</div>
+</body>
+</html>
